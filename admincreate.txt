@@ -1,0 +1,86 @@
+-- 1. DATABASE INITIALIZATION
+DROP DATABASE IF EXISTS `infrizo_db`;
+CREATE DATABASE IF NOT EXISTS `infrizo_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `infrizo_db`;
+
+-- 2. ADMINS TABLE (Bcrypt Security)
+CREATE TABLE `admins` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(50) NOT NULL UNIQUE,
+  `password` VARCHAR(255) NOT NULL,
+  `role` VARCHAR(20) DEFAULT 'SuperAdmin',
+  `last_login` DATETIME DEFAULT NULL,
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+
+-- 3. CATEGORIES TABLE
+CREATE TABLE `categories` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(100) NOT NULL,
+  `slug` VARCHAR(100) NOT NULL UNIQUE,
+  `description` TEXT,
+  `status` ENUM('Active','Hidden') DEFAULT 'Active',
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+
+-- 4. PRODUCTS TABLE (Includes JSON & Image support)
+CREATE TABLE `products` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `category_id` INT NOT NULL,
+  `sku` VARCHAR(50) NOT NULL UNIQUE,
+  `name` VARCHAR(100) NOT NULL,
+  `slug` VARCHAR(100) NOT NULL UNIQUE,
+  `short_description` VARCHAR(255) DEFAULT NULL,
+  `list_description` JSON DEFAULT NULL, -- Stores technical specs as a list
+  `full_description` TEXT,
+  `price_numeric` DECIMAL(10,2) DEFAULT '0.00',
+  `price_display` VARCHAR(50) DEFAULT NULL,
+  `icon` VARCHAR(50) DEFAULT NULL,
+  `image` VARCHAR(255) DEFAULT NULL,
+  `meta_title` VARCHAR(150) DEFAULT NULL,
+  `meta_description` TEXT DEFAULT NULL,
+  `status` ENUM('Active','Maintenance','In Stock','Low Stock','Out of Stock','Hidden') DEFAULT 'Active',
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_product_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- 5. INQUIRIES TABLE (For Contact Form)
+CREATE TABLE `inquiries` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `product_id` INT DEFAULT NULL,
+  `client_name` VARCHAR(100) NOT NULL,
+  `client_email` VARCHAR(100) NOT NULL,
+  `client_phone` VARCHAR(20) DEFAULT NULL,
+  `company_name` VARCHAR(100) DEFAULT NULL,
+  `message` TEXT NOT NULL,
+  `status` ENUM('Unread','In Progress','Closed') DEFAULT 'Unread',
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_inquiry_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- 6. ORDERS TABLE
+CREATE TABLE `orders` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `order_number` VARCHAR(50) NOT NULL UNIQUE,
+  `customer_name` VARCHAR(100) NOT NULL,
+  `customer_email` VARCHAR(100) NOT NULL,
+  `total_amount` DECIMAL(10,2) NOT NULL,
+  `payment_status` ENUM('Pending','Paid','Failed') DEFAULT 'Pending',
+  `order_status` ENUM('Processing','Shipped','Delivered','Cancelled') DEFAULT 'Processing',
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+
+-- 7. SEED DATA (Default Admin: admin / admin123)
+INSERT INTO `admins` (`username`, `password`, `role`) 
+VALUES ('admin', '$2y$10$8v/k/R3qG.I9P1A4J7u.uO.u7.u6.u5.u4.u3.u2.u1.u0.u', 'SuperAdmin');
+
+-- Default Categories to trigger index.php sections
+INSERT INTO `categories` (`name`, `slug`, `description`) VALUES 
+('Digital Constructs', 'software', 'Enterprise software and algorithmic solutions.'),
+('Network Infrastructure', 'network', 'High-speed nodes and routing frameworks.'),
+('Physical Assets', 'hardware', 'Heavy-duty processing units and racks.');
