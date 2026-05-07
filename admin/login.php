@@ -2,6 +2,8 @@
 // 1. Require config (This now securely starts the session for us!)
 require_once '../includes/config.php';
 
+
+
 // 2. Auto-Redirect: If you are already logged in, go straight to the dashboard
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
     header("Location: index.php");

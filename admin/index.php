@@ -48,7 +48,9 @@ $page = $_GET['page'] ?? 'dashboard';
           'delete_product',
           'delete_category',
           'edit_category',
-          'orders'
+          'orders',
+          'view_order',
+          'generate_quote'
 
       ];
       

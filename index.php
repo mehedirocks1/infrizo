@@ -1,4 +1,9 @@
 <?php
+// Start session safely to track the cart
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once 'includes/config.php';
 
 /**
@@ -12,7 +17,8 @@ $ecommerce_categories = $pdo->query("
     ORDER BY id ASC
 ")->fetchAll();
 
-// We will fetch products inside the loop below to keep the code clean.
+// Calculate total cart items for the HUD
+$cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -37,7 +43,21 @@ $ecommerce_categories = $pdo->query("
       <div class="font-robot font-bold text-3xl tracking-widest text-slate-900 flex items-center gap-2">
         <span class="text-cyan-600">⟨</span>INFRIZO<span class="text-cyan-600">⟩</span>
       </div>
-      <div class="hidden md:flex items-center gap-10 text-sm font-bold tracking-widest text-slate-500" id="desktop-links"></div>
+      
+      <div class="hidden md:flex items-center gap-10 text-sm font-bold tracking-widest text-slate-500" id="desktop-links">
+          <a href="#systems" class="hover:text-cyan-600 transition-colors uppercase">Systems</a>
+          
+          <!-- CART HUD INDICATOR -->
+          <a href="cart.php" class="flex items-center gap-2 text-slate-900 hover:text-cyan-600 transition-colors uppercase bg-white/50 px-4 py-2 border border-slate-200 backdrop-blur-sm">
+              [ CART ]
+              <?php if($cart_count > 0): ?>
+                  <span class="bg-cyan-600 text-white px-2 py-0.5 text-[10px] animate-pulse">
+                      <?= $cart_count ?>_ASSETS
+                  </span>
+              <?php endif; ?>
+          </a>
+      </div>
+      
       <button class="hidden md:block btn-cyber px-6 py-2 text-sm">INITIATE_CONTACT</button>
       <button id="mobile-menu-btn" class="md:hidden text-cyan-600 text-2xl font-bold">[≡]</button>
     </div>
@@ -59,8 +79,8 @@ $ecommerce_categories = $pdo->query("
           &gt; Standby for operation.<span class="cursor-blink"></span>
         </p>
         <div class="flex flex-wrap gap-6">
-          <button class="btn-cyber btn-cyber-solid px-8 py-4">EXECUTE_DEPLOYMENT</button>
-          <button class="btn-cyber px-8 py-4 bg-white">VIEW_LOGS</button>
+          <a href="#systems" class="btn-cyber btn-cyber-solid px-8 py-4 text-xs">EXECUTE_DEPLOYMENT</a>
+          <a href="cart.php" class="btn-cyber px-8 py-4 bg-white text-xs">VIEW_QUOTES</a>
         </div>
       </div>
       <div class="relative h-[500px] items-center justify-center hidden lg:flex">
@@ -86,7 +106,6 @@ $ecommerce_categories = $pdo->query("
       <div id="systems-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
   </section>
-
 
 <!-- DYNAMIC MODULES: E-COMMERCE -->
 <?php foreach ($ecommerce_categories as $index => $cat): 
@@ -170,10 +189,13 @@ $ecommerce_categories = $pdo->query("
                                   <span class="text-[10px] font-bold">i</span>
                               </a>
                               
-                              <!-- Order Link (Linked to your order.php) -->
-                              <a href="order.php?asset_id=<?= $p['id'] ?>" class="px-6 py-2 bg-slate-900 text-white text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-<?= $accentColor ?>-600 transition-all shadow-lg shadow-slate-500/20 flex items-center">
-                                  <?= $isHardware ? 'DEPLOY' : 'ACQUIRE' ?>
-                              </a>
+                              <!-- Cart Form -->
+                              <form method="POST" action="cart_action.php" class="flex items-stretch m-0">
+                                  <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
+                                  <button type="submit" name="add_to_cart" class="px-6 bg-slate-900 text-white text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-<?= $accentColor ?>-600 transition-all shadow-lg shadow-slate-500/20 flex items-center h-full">
+                                      ADD_TO_CART
+                                  </button>
+                              </form>
                           </div>
                       </div>
                   </div>
@@ -190,7 +212,7 @@ $ecommerce_categories = $pdo->query("
     <div class="max-w-7xl mx-auto relative z-10">
       <div class="text-center mb-16">
         <h2 class="text-5xl font-robot font-bold text-slate-900 mb-4">AVAILABLE <span class="text-cyan-600">UNITS</span></h2>
-        <p class="text-slate-600 text-sm">Deploy specialized biological assets for technical operations.</p>
+        <p class="text-slate-600 text-sm font-bold uppercase tracking-widest">Deploy specialized biological assets for technical operations.</p>
       </div>
       <div id="experts-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
     </div>
@@ -226,17 +248,17 @@ $ecommerce_categories = $pdo->query("
     ];
 
     document.getElementById('systems-grid').innerHTML = softwareServices.map(s => `
-      <div class="sci-fi-card p-8 group">
+      <div class="sci-fi-card p-8 group border border-slate-200 hover:shadow-xl transition-all duration-300">
         <div class="flex justify-between items-start mb-6"><div class="text-3xl text-cyan-600">${s.icon}</div><div class="text-[10px] font-bold tracking-widest text-slate-500">${s.id}</div></div>
-        <h3 class="text-2xl font-robot font-bold text-slate-900 mb-3 group-hover:text-cyan-600 transition-colors">${s.name}</h3>
+        <h3 class="text-2xl font-robot font-bold text-slate-900 mb-3 group-hover:text-cyan-600 transition-colors uppercase">${s.name}</h3>
         <p class="text-sm text-slate-600 leading-relaxed mb-6">${s.desc}</p>
         <div class="text-xs text-cyan-700 font-bold uppercase tracking-widest cursor-pointer hover:text-cyan-500">Compile.run() ↗</div>
       </div>`).join('');
 
     document.getElementById('experts-grid').innerHTML = experts.map(e => `
-      <div class="sci-fi-card p-6 h-full flex flex-col items-center text-center relative overflow-hidden">
+      <div class="sci-fi-card p-6 h-full flex flex-col items-center text-center relative overflow-hidden border border-slate-200">
         <div class="text-[10px] font-bold text-cyan-600 tracking-widest w-full text-left mb-6">${e.id} // ${e.class}</div>
-        <h3 class="font-robot font-bold text-xl text-slate-900 mb-1">${e.role}</h3>
+        <h3 class="font-robot font-bold text-xl text-slate-900 mb-1 uppercase">${e.role}</h3>
         <div class="text-2xl font-robot font-bold text-slate-900 mt-auto">${e.rate}<span class="text-xs text-slate-500 ml-1">/HR</span></div>
       </div>`).join('');
 

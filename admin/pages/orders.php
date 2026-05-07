@@ -28,7 +28,7 @@ $offset = ($page - 1) * $limit;
 $search = $_GET['search'] ?? '';
 $filter_status = $_GET['status'] ?? '';
 
-// Build Base Query - Using unique placeholders to prevent PDO HY093 error
+// Build Base Query - Linking Orders -> Order Items -> Products
 $whereClauses = ["(o.order_number LIKE :s1 OR o.customer_name LIKE :s2 OR p.name LIKE :s3)"];
 $params = [
     ':s1' => "%$search%",
@@ -43,18 +43,28 @@ if ($filter_status) {
 
 $whereSQL = "WHERE " . implode(" AND ", $whereClauses);
 
-// Get Total Count for Pagination
-$countStmt = $pdo->prepare("SELECT COUNT(*) FROM orders o LEFT JOIN products p ON o.product_id = p.id $whereSQL");
+// Get Total Count for Pagination (Using DISTINCT because joins multiply rows)
+$countStmt = $pdo->prepare("
+    SELECT COUNT(DISTINCT o.id) 
+    FROM orders o 
+    LEFT JOIN order_items oi ON o.id = oi.order_id 
+    LEFT JOIN products p ON oi.product_id = p.id 
+    $whereSQL
+");
 $countStmt->execute($params);
 $total_orders = $countStmt->fetchColumn();
 $total_pages = ceil($total_orders / $limit);
 
-// Fetch Main Data with Product Join
+// Fetch Main Data with Product Join (Grouped to show preview of items)
 $stmt = $pdo->prepare("
-    SELECT o.*, p.name as product_name, p.sku as product_sku 
+    SELECT o.*, 
+           COUNT(oi.id) as total_items, 
+           GROUP_CONCAT(p.name SEPARATOR ', ') as product_names 
     FROM orders o 
-    LEFT JOIN products p ON o.product_id = p.id 
+    LEFT JOIN order_items oi ON o.id = oi.order_id 
+    LEFT JOIN products p ON oi.product_id = p.id 
     $whereSQL 
+    GROUP BY o.id 
     ORDER BY o.created_at DESC 
     LIMIT $limit OFFSET $offset
 ");
@@ -78,7 +88,7 @@ $stats = $pdo->query("SELECT
     
     <div class="flex gap-4">
         <div class="sci-fi-card bg-slate-900 text-white px-6 py-3 border border-slate-700">
-            <div class="text-[8px] text-cyan-400 font-bold tracking-widest uppercase">Total_Revenue</div>
+            <div class="text-[8px] text-cyan-400 font-bold tracking-widest uppercase">Total_Valuation</div>
             <div class="text-xl font-robot font-bold">$<?= number_format($stats['revenue'] ?? 0, 2) ?></div>
         </div>
         <button onclick="window.print()" class="btn-cyber px-6 py-3 text-[10px] bg-white border border-slate-200 font-bold tracking-widest hover:bg-slate-50 transition-colors">EXPORT_LOGS</button>
@@ -90,7 +100,7 @@ $stats = $pdo->query("SELECT
     <form method="GET" class="flex flex-wrap gap-4">
         <input type="hidden" name="page" value="orders">
         <div class="flex-1 min-w-[300px]">
-            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="SEARCH BY ORDER#, NAME, OR ASSET..." class="input-cyber w-full bg-white border-slate-200 px-4 py-3 text-xs focus:border-cyan-500">
+            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="SEARCH BY QUOTE#, CLIENT, OR ASSET..." class="input-cyber w-full bg-white border-slate-200 px-4 py-3 text-xs focus:border-cyan-500">
         </div>
         <select name="status" class="input-cyber bg-white border-slate-200 px-6 py-3 text-xs font-bold uppercase cursor-pointer">
             <option value="">ALL_STATUS</option>
@@ -107,44 +117,48 @@ $stats = $pdo->query("SELECT
     <table class="w-full text-left">
         <thead>
             <tr class="bg-slate-50 border-b border-slate-200">
-                <th class="py-5 px-6 text-[9px] font-bold text-slate-400 tracking-widest uppercase">Reference</th>
-                <th class="py-5 px-6 text-[9px] font-bold text-slate-400 tracking-widest uppercase">Subject / Comms</th>
-                <th class="py-5 px-6 text-[9px] font-bold text-slate-400 tracking-widest uppercase">Asset_Deployed</th>
+                <th class="py-5 px-6 text-[9px] font-bold text-slate-400 tracking-widest uppercase">Quote Ref</th>
+                <th class="py-5 px-6 text-[9px] font-bold text-slate-400 tracking-widest uppercase">Client Comms</th>
+                <th class="py-5 px-6 text-[9px] font-bold text-slate-400 tracking-widest uppercase">Payload Preview</th>
                 <th class="py-5 px-6 text-[9px] font-bold text-slate-400 tracking-widest uppercase">Financials</th>
-                <th class="py-5 px-6 text-[9px] font-bold text-slate-400 tracking-widest uppercase">Status_Controls</th>
+                <th class="py-5 px-6 text-[9px] font-bold text-slate-400 tracking-widest uppercase text-right">System Controls</th>
             </tr>
         </thead>
         <tbody class="text-sm">
             <?php if (empty($orders)): ?>
                 <tr>
                     <td colspan="5" class="py-20 text-center text-slate-400 font-mono text-xs tracking-widest uppercase">
-                        [ NO RECORDS MATCHING QUERY PARAMETERS ]
+                        [ NO QUOTES DETECTED IN MATRIX ]
                     </td>
                 </tr>
             <?php endif; ?>
 
             <?php foreach($orders as $o): ?>
             <tr class="border-b border-slate-100 hover:bg-cyan-50/20 transition-all group">
-                <td class="py-6 px-6">
+                <td class="py-6 px-6 align-top">
                     <div class="text-cyan-600 font-mono font-bold text-xs"><?= $o['order_number'] ?></div>
                     <div class="text-[9px] text-slate-400 font-mono mt-1 uppercase"><?= date('Y/m/d • H:i', strtotime($o['created_at'])) ?></div>
                 </td>
                 
-                <td class="py-6 px-6">
+                <td class="py-6 px-6 align-top">
                     <div class="font-bold text-slate-900 uppercase tracking-tight"><?= htmlspecialchars($o['customer_name']) ?></div>
                     <div class="text-[10px] text-slate-400 lowercase font-mono"><?= htmlspecialchars($o['customer_email']) ?></div>
                 </td>
 
-                <td class="py-6 px-6">
-                    <?php if($o['product_name']): ?>
-                        <div class="text-slate-900 font-bold"><?= htmlspecialchars($o['product_name']) ?></div>
-                        <div class="text-[9px] text-cyan-600 font-mono uppercase tracking-tighter"><?= $o['product_sku'] ?></div>
+                <td class="py-6 px-6 align-top max-w-[200px]">
+                    <?php if($o['total_items'] > 0): ?>
+                        <div class="text-slate-900 font-bold uppercase text-[10px] tracking-widest">
+                            <?= $o['total_items'] ?> ASSET(S) DETECTED
+                        </div>
+                        <div class="text-[9px] text-slate-500 mt-1 truncate">
+                            <?= htmlspecialchars($o['product_names']) ?>
+                        </div>
                     <?php else: ?>
-                        <span class="text-slate-300 italic text-xs">Unknown Asset</span>
+                        <span class="text-slate-300 italic text-xs">Awaiting Data...</span>
                     <?php endif; ?>
                 </td>
 
-                <td class="py-6 px-6">
+                <td class="py-6 px-6 align-top">
                     <div class="text-lg font-robot font-bold text-slate-900">$<?= number_format($o['total_amount'], 2) ?></div>
                     <div class="mt-1">
                         <span class="px-2 py-0.5 text-[8px] font-black uppercase border <?= $o['payment_status'] == 'Paid' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200' ?>">
@@ -153,25 +167,35 @@ $stats = $pdo->query("SELECT
                     </div>
                 </td>
                 
-                <td class="py-6 px-6">
-                    <form method="POST" class="flex flex-col gap-2">
-                        <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
-                        <div class="flex gap-1">
-                            <select name="new_payment" class="text-[9px] p-1.5 border border-slate-200 bg-white font-bold uppercase focus:border-cyan-500 outline-none">
+                <td class="py-6 px-6 align-top">
+                    <div class="flex flex-col gap-2 items-end">
+                        
+                        <!-- QUOTE & INSPECT LINKS -->
+                        <div class="flex gap-2 w-full justify-end">
+                            <a href="?page=view_order&id=<?= $o['id'] ?>" class="text-center bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-600 text-[9px] font-bold uppercase tracking-widest py-1.5 px-3 transition-colors">
+                                [ Inspect ]
+                            </a>
+                            <a href="generate_quote.php?id=<?= $o['id'] ?>" target="_blank" class="text-center bg-cyan-50 border border-cyan-200 hover:bg-cyan-100 text-cyan-700 text-[9px] font-bold uppercase tracking-widest py-1.5 px-3 transition-colors">
+                                [ PDF_QUOTE ]
+                            </a>
+                        </div>
+
+                        <!-- STATUS UPDATE FORM -->
+                        <form method="POST" class="flex gap-1 items-center mt-1 w-full justify-end">
+                            <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
+                            <select name="new_payment" class="text-[9px] p-1.5 border border-slate-200 bg-white font-bold uppercase focus:border-cyan-500 outline-none w-20">
                                 <option value="Pending" <?= $o['payment_status'] == 'Pending' ? 'selected' : '' ?>>UNPAID</option>
                                 <option value="Paid" <?= $o['payment_status'] == 'Paid' ? 'selected' : '' ?>>PAID</option>
                             </select>
-                            <select name="new_status" class="text-[9px] p-1.5 border border-slate-200 bg-white font-bold uppercase focus:border-cyan-500 outline-none">
+                            <select name="new_status" class="text-[9px] p-1.5 border border-slate-200 bg-white font-bold uppercase focus:border-cyan-500 outline-none w-20">
                                 <option value="Processing" <?= $o['order_status'] == 'Processing' ? 'selected' : '' ?>>PROC</option>
                                 <option value="Shipped" <?= $o['order_status'] == 'Shipped' ? 'selected' : '' ?>>SHIP</option>
                                 <option value="Delivered" <?= $o['order_status'] == 'Delivered' ? 'selected' : '' ?>>DLVR</option>
                             </select>
-                        </div>
-                        <div class="flex justify-between items-center mt-1">
-                            <button type="submit" name="update_status" class="text-[9px] text-cyan-600 font-bold uppercase hover:underline underline-offset-4 tracking-widest">[ Sync_Data ]</button>
-                            <button type="submit" name="purge_order" onclick="return confirm('CRITICAL WARNING: Permanent deletion of record. Proceed?')" class="text-[9px] text-red-400 font-bold uppercase hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity tracking-widest">[ Purge ]</button>
-                        </div>
-                    </form>
+                            <button type="submit" name="update_status" class="text-[9px] bg-slate-900 text-white p-1.5 font-bold uppercase hover:bg-cyan-600 transition-colors" title="Sync Data">Sync</button>
+                            <button type="submit" name="purge_order" onclick="return confirm('CRITICAL WARNING: Permanent deletion of record. Proceed?')" class="text-[9px] text-red-400 p-1.5 font-bold uppercase hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Purge">X</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             <?php endforeach; ?>
