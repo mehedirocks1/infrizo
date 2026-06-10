@@ -1,6 +1,8 @@
 <?php
-session_start();
 require_once 'includes/config.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $cart_items = $_SESSION['cart'] ?? [];
 $products = [];
@@ -22,6 +24,9 @@ if (!empty($cart_items)) {
 $quote_success = false;
 $order_num = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_quote']) && !empty($products)) {
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        die('CSRF validation failed.');
+    }
     $order_num = "QUO-" . strtoupper(substr(md5(time()), 0, 8));
     $name = $_POST['customer_name'];
     $email = $_POST['customer_email'];
@@ -53,6 +58,13 @@ require_once 'includes/header.php';
 ?>
 
 <main class="pt-32 pb-20 px-6 max-w-7xl mx-auto min-h-screen">
+    <?php if ($quote_success && !empty($settings['meta_pixel_id'])): ?>
+        <script>
+            if (typeof fbq === 'function') {
+                fbq('track', 'Purchase', {value: <?= $total_value ?>, currency: 'USD'});
+            }
+        </script>
+    <?php endif; ?>
     <?php if ($quote_success): ?>
         <div class="sci-fi-card p-12 text-center max-w-2xl mx-auto mt-20">
             <h1 class="text-4xl font-robot font-bold text-cyan-600 mb-4">QUOTATION REQUESTED.</h1>
@@ -93,6 +105,7 @@ require_once 'includes/header.php';
                             <div class="text-right">
                                 <div class="font-bold text-slate-900 text-xl mb-2">$<?= number_format($p['subtotal'], 2) ?></div>
                                 <form method="POST" action="cart_action.php">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                     <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
                                     <button type="submit" name="remove_item" class="text-[9px] text-red-400 hover:text-red-600 font-bold uppercase tracking-widest">[ Remove ]</button>
                                 </form>
@@ -112,6 +125,7 @@ require_once 'includes/header.php';
                     </div>
 
                     <form method="POST" action="" class="space-y-4">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                         <div>
                             <label class="block text-[9px] font-bold text-slate-400 tracking-widest mb-2 uppercase">Subject Name</label>
                             <input type="text" name="customer_name" required class="input-cyber w-full p-3 text-sm bg-white/5 focus:bg-white/10 border-white/20 text-white" <?= empty($products) ? 'disabled' : '' ?>>
@@ -130,4 +144,4 @@ require_once 'includes/header.php';
     <?php endif; ?>
 </main>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once 'includes/footer.php'; ?>s/footer.php'; ?>

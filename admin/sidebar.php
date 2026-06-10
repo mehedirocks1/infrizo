@@ -59,6 +59,20 @@
         <span class="text-yellow-500 mr-2">[@]</span> Engineers
     </a>
 
+    <!-- SYSTEM SETTINGS -->
+    <div class="px-4 pt-8 pb-2 text-xs text-slate-500 font-bold tracking-widest uppercase">System Core</div>
+
+    <a href="?page=settings" class="<?= $page == 'settings' ? 'bg-indigo-900/40 border-l-2 border-indigo-500' : 'hover:bg-slate-800' ?> text-slate-300 px-4 py-3 text-sm tracking-widest font-bold uppercase transition-all group">
+        <span class="text-indigo-500 mr-2">[⚙]</span> Global Settings
+    </a>
+
+    <a href="?page=admins" class="<?= $page == 'admins' ? 'bg-indigo-900/40 border-l-2 border-indigo-500' : 'hover:bg-slate-800' ?> text-slate-300 px-4 py-3 text-sm tracking-widest font-bold uppercase transition-all group">
+        <span class="text-indigo-500 mr-2">[A]</span> Admin Access
+    </a>
+
+    <a href="?page=backup" class="<?= $page == 'backup' ? 'bg-indigo-900/40 border-l-2 border-indigo-500' : 'hover:bg-slate-800' ?> text-slate-300 px-4 py-3 text-sm tracking-widest font-bold uppercase transition-all group">
+        <span class="text-indigo-500 mr-2">[↓]</span> System Backup
+    </a>
 
     <div class="mt-auto pt-10">
         <a href="logout.php" class="text-red-500/60 hover:text-red-500 px-4 py-3 text-[10px] tracking-[0.3em] font-bold uppercase transition-all flex items-center gap-2 border-t border-slate-800">

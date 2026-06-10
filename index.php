@@ -1,24 +1,12 @@
 <?php
-// Start session safely to track the cart
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once 'includes/header.php';
 
-require_once 'includes/config.php';
-
-/**
- * 1. FETCH DYNAMIC E-COMMERCE CATEGORIES
- * This only pulls categories that have 'Network' or 'Hardware' in their slug
- * (or you can remove the WHERE clause to show EVERY category you create).
- */
-$ecommerce_categories = $pdo->query("
-    SELECT * FROM categories 
-    WHERE slug IN ('network', 'hardware') 
+// Fetch ALL categories dynamically
+$all_categories = $pdo->query("
+    SELECT * FROM categories
+    WHERE status = 'Active'
     ORDER BY id ASC
 ")->fetchAll();
-
-// Calculate total cart items for the HUD
-$cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 
 // Fetch dynamic engineers / units
 $engineers = [];
@@ -27,65 +15,10 @@ try {
     if ($stmt) {
         $engineers = $stmt->fetchAll();
     }
-} catch(Exception $e) {
-    // Fallback if table hasn't been created yet
-    $engineers = [
-        ['unit_id' => 'UNIT-01', 'name' => 'Agent Null', 'role' => 'Network Eng.', 'hourly_rate' => 15, 'unit_class' => 'Alpha', 'details' => 'Standard protocol operative.', 'photo_path' => ''],
-        ['unit_id' => 'UNIT-02', 'name' => 'Agent Void', 'role' => 'Cyber Security', 'hourly_rate' => 20, 'unit_class' => 'Shield', 'details' => 'Advanced penetration tester.', 'photo_path' => '']
-    ];
-}
+} catch(Exception $e) {}
+
+$first_cat_slug = !empty($all_categories) ? '#' . htmlspecialchars($all_categories[0]['slug']) : '#systems';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>INFRIZO - IT Solutions || Best IT software company in Bangladesh</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  
-  <meta name="description" content="INFRIZO - IT Solutions. Best IT software company in Bangladesh providing enterprise software, POS, mobile apps, and algorithmic solutions.">
-  <meta name="keywords" content="IT Solutions, Software Company, Bangladesh, Web Development, ERP, POS, Tech Infrastructure">
-  <meta name="robots" content="index, follow">
-  <meta property="og:title" content="INFRIZO - IT Solutions">
-  <meta property="og:description" content="Automated IT infrastructure and robotic software solutions. Best IT software company in BD.">
-
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body class="selection:bg-cyan-500/30 selection:text-white">
-  
-  <div class="scanlines"></div>
-  <div class="global-cyber-grid"></div>
-
-  <!-- HUD NAVBAR -->
-  <nav id="main-nav" class="fixed top-0 w-full z-50 transition-all duration-300 bg-transparent border-transparent py-6">
-    <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
-      <div class="font-robot font-bold text-3xl tracking-widest text-slate-900 flex items-center gap-2">
-        <span class="text-cyan-600">⟨</span>INFRIZO<span class="text-cyan-600">⟩</span>
-      </div>
-      
-      <div class="hidden md:flex items-center gap-10 text-sm font-bold tracking-widest text-slate-500" id="desktop-links">
-          <a href="#systems" class="hover:text-cyan-600 transition-colors uppercase">Systems</a>
-          
-          <!-- CART HUD INDICATOR -->
-          <a href="cart.php" class="flex items-center gap-2 text-slate-900 hover:text-cyan-600 transition-colors uppercase bg-white/50 px-4 py-2 border border-slate-200 backdrop-blur-sm">
-              [ CART ]
-              <?php if($cart_count > 0): ?>
-                  <span class="bg-cyan-600 text-white px-2 py-0.5 text-[10px] animate-pulse">
-                      <?= $cart_count ?>_ASSETS
-                  </span>
-              <?php endif; ?>
-          </a>
-      </div>
-      
-      <button class="hidden md:block btn-cyber px-6 py-2 text-sm">INITIATE_CONTACT</button>
-      <button id="mobile-menu-btn" class="md:hidden text-cyan-600 text-2xl font-bold">[≡]</button>
-    </div>
-  </nav>
-
-  <div id="mobile-menu" class="hidden fixed inset-0 z-40 bg-white/95 backdrop-blur-xl border-b border-cyan-200 pt-24 px-6 flex-col gap-6"></div>
 
   <!-- HERO SECTION -->
   <section class="relative pt-40 pb-20 lg:pt-52 lg:pb-32 px-6 min-h-screen flex items-center overflow-hidden">
@@ -101,7 +34,7 @@ try {
           &gt; Standby for operation.<span class="cursor-blink"></span>
         </p>
         <div class="flex flex-wrap gap-6">
-          <a href="#systems" class="btn-cyber btn-cyber-solid px-8 py-4 text-xs">EXECUTE_DEPLOYMENT</a>
+          <a href="<?= $first_cat_slug ?>" class="btn-cyber btn-cyber-solid px-8 py-4 text-xs">EXECUTE_DEPLOYMENT</a>
           <a href="cart.php" class="btn-cyber px-8 py-4 bg-white text-xs">VIEW_QUOTES</a>
         </div>
       </div>
@@ -116,40 +49,26 @@ try {
     </div>
   </section>
 
-  <!-- STATIC MODULE: SOFTWARE -->
-  <section id="systems" class="py-24 px-6 relative border-t border-slate-200 bg-slate-100/50">
-    <div class="max-w-7xl mx-auto relative z-10">
-      <div class="mb-16 text-center md:text-left">
-        <div class="text-cyan-600 font-bold text-xs tracking-[0.3em] mb-4 flex items-center justify-center md:justify-start gap-3">
-          <span class="w-8 h-[1px] bg-cyan-600"></span> // MODULE: SOFTWARE
-        </div>
-        <h2 class="text-5xl font-robot font-bold text-slate-900">DIGITAL <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-purple-600">CONSTRUCTS</span>.</h2>
-      </div>
-      <div id="systems-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-    </div>
-  </section>
-
-<!-- DYNAMIC MODULES: E-COMMERCE -->
-<?php foreach ($ecommerce_categories as $index => $cat): 
-    // Fetch products for THIS specific category
-    $stmt = $pdo->prepare("SELECT * FROM products WHERE category_id = ? AND status != 'Hidden' ORDER BY id ASC");
+<!-- DYNAMIC CATEGORY MODULES -->
+<?php foreach ($all_categories as $index => $cat): 
+    // Fetch max 12 products for THIS specific category
+    $stmt = $pdo->prepare("SELECT * FROM products WHERE category_id = ? AND status != 'Hidden' ORDER BY id ASC LIMIT 12");
     $stmt->execute([$cat['id']]);
     $products = $stmt->fetchAll();
+    if (empty($products)) continue;
     
     // UI Logic
     $bgClass = ($index % 2 == 0) ? 'bg-white/50' : 'bg-slate-100/50';
-    $isHardware = ($cat['slug'] == 'hardware');
-    $accentColor = $isHardware ? 'purple' : 'cyan';
+    $accentColor = ['cyan', 'purple', 'indigo', 'blue', 'teal'][$index % 5];
 ?>
-<section id="<?= $cat['slug'] ?>" class="py-24 px-6 relative border-t border-slate-200 <?= $bgClass ?>">
+<section id="<?= htmlspecialchars($cat['slug']) ?>" class="py-24 px-6 relative border-t border-slate-200 <?= $bgClass ?>">
   <div class="max-w-7xl mx-auto relative z-10">
     
     <!-- Category Header -->
-    <div class="mb-16 text-center <?= $isHardware ? 'md:text-right flex flex-col md:items-end' : 'md:text-left' ?>">
-      <div class="text-<?= $accentColor ?>-600 font-bold text-xs tracking-[0.3em] mb-4 flex items-center justify-center <?= $isHardware ? 'md:justify-end' : 'md:justify-start' ?> gap-3">
-        <?= !$isHardware ? '<span class="w-8 h-[1px] bg-cyan-600"></span>' : '' ?> 
-        // MODULE: <?= strtoupper($cat['slug']) ?> 
-        <?= $isHardware ? '<span class="w-8 h-[1px] bg-purple-600 hidden md:block"></span>' : '' ?>
+    <div class="mb-16 text-center md:text-left flex flex-col md:items-start">
+      <div class="text-<?= $accentColor ?>-600 font-bold text-xs tracking-[0.3em] mb-4 flex items-center justify-center md:justify-start gap-3">
+        <span class="w-8 h-[1px] bg-<?= $accentColor ?>-600"></span> 
+        // MODULE: <?= strtoupper(htmlspecialchars($cat['slug'])) ?> 
       </div>
       <h2 class="text-5xl font-robot font-bold text-slate-900 uppercase">
           <?= htmlspecialchars($cat['name']) ?>.
@@ -162,7 +81,7 @@ try {
     <!-- Products Grid -->
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
       <?php foreach ($products as $p): ?>
-          <div class="sci-fi-card group flex flex-col bg-white border border-slate-200 hover:shadow-2xl transition-all duration-500" style="<?= $isHardware ? 'border-color: rgba(124, 58, 237, 0.1)' : '' ?>">
+          <div class="sci-fi-card group flex flex-col bg-white border border-slate-200 hover:shadow-2xl transition-all duration-500">
               
               <!-- Product Image/Visual Header -->
               <div class="relative h-56 w-full overflow-hidden bg-slate-50 border-b border-slate-100">
@@ -213,6 +132,7 @@ try {
                               
                               <!-- Cart Form -->
                               <form method="POST" action="cart_action.php" class="flex items-stretch m-0">
+                                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                   <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
                                   <button type="submit" name="add_to_cart" class="px-6 bg-slate-900 text-white text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-<?= $accentColor ?>-600 transition-all shadow-lg shadow-slate-500/20 flex items-center h-full">
                                       ADD_TO_CART
@@ -225,6 +145,12 @@ try {
           </div>
       <?php endforeach; ?>
     </div>
+
+    <div class="mt-12 text-center md:text-left">
+        <a href="category.php?slug=<?= htmlspecialchars($cat['slug']) ?>" class="btn-cyber px-8 py-3 text-xs border-<?= $accentColor ?>-600 text-<?= $accentColor ?>-600 hover:bg-<?= $accentColor ?>-600 hover:text-white transition-all">
+            VIEW_ALL_<?= strtoupper(htmlspecialchars($cat['name'])) ?> ↗
+        </a>
+    </div>
   </div>
 </section>
 <?php endforeach; ?>
@@ -236,7 +162,24 @@ try {
         <h2 class="text-5xl font-robot font-bold text-slate-900 mb-4">AVAILABLE <span class="text-cyan-600">UNITS</span></h2>
         <p class="text-slate-600 text-sm font-bold uppercase tracking-widest">Deploy specialized biological assets for technical operations.</p>
       </div>
-      <div id="experts-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+      <div id="experts-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <?php foreach ($engineers as $e): ?>
+              <div class="sci-fi-card p-6 h-full flex flex-col items-center text-center relative overflow-hidden border border-slate-200 hover:shadow-xl transition-all duration-300">
+                  <div class="text-[10px] font-bold text-cyan-600 tracking-widest w-full text-left mb-6"><?= htmlspecialchars($e['unit_id']) ?> // <?= htmlspecialchars($e['unit_class']) ?></div>
+                  <div class="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.3)] bg-slate-50 flex items-center justify-center shrink-0">
+                      <?php if(!empty($e['photo_path'])): ?>
+                          <img src="uploads/photos/<?= htmlspecialchars($e['photo_path']) ?>" class="w-full h-full object-cover">
+                      <?php else: ?>
+                          <span class="text-3xl text-slate-300 font-mono">?</span>
+                      <?php endif; ?>
+                  </div>
+                  <h3 class="font-robot font-bold text-xl text-slate-900 uppercase"><?= htmlspecialchars($e['name'] ?? 'Unknown Operative') ?></h3>
+                  <div class="text-[10px] font-bold text-cyan-700 tracking-[0.2em] mb-3 uppercase"><?= htmlspecialchars($e['role']) ?></div>
+                  <p class="text-[11px] text-slate-500 line-clamp-3 mb-6 leading-relaxed italic h-12">"<?= htmlspecialchars($e['details'] ?? 'Ready for deployment.') ?>"</p>
+                  <div class="text-2xl font-robot font-bold text-slate-900 mt-auto mb-6">$<?= floatval($e['hourly_rate']) ?><span class="text-xs text-slate-500 ml-1">/HR</span></div>
+              </div>
+          <?php endforeach; ?>
+      </div>
     </div>
   </section>
 
@@ -252,65 +195,4 @@ try {
     </div>
   </section>
 
-  <!-- TERMINAL FOOTER -->
-  <footer class="relative bg-slate-100 pt-16 pb-8 px-6 border-t-4 border-cyan-600 z-10">
-    <div class="max-w-7xl mx-auto text-center md:text-left">
-      <div class="grid md:grid-cols-4 gap-12 mb-12">
-        <div class="col-span-1 md:col-span-2">
-          <div class="font-robot font-bold text-3xl tracking-widest text-slate-900 mb-6">⟨INFRIZO⟩</div>
-          <p class="text-slate-600 text-xs max-w-sm mx-auto md:mx-0 leading-relaxed uppercase tracking-wider font-bold">Automated IT infrastructure. Running protocol v2.0.4.</p>
-        </div>
-      </div>
-      <div class="pt-6 border-t border-slate-300 text-[10px] tracking-[0.2em] text-slate-500 font-bold uppercase">© 2026 INFRIZO SYS. ALL RIGHTS RESERVED.</div>
-    </div>
-  </footer>
-
-  <script>
-    const softwareServices = [
-      { id: "SW-01", name: "Custom Web Dev", icon: "⟨/⟩", desc: "Full-stack web apps compiled with modern architecture." },
-      { id: "SW-02", name: "ERP Systems", icon: "[⚙]", desc: "Enterprise resource planning to automate operations." },
-      { id: "SW-03", name: "POS Interface", icon: "◈", desc: "Point-of-sale terminals for retail and service sectors." },
-      { id: "SW-04", name: "HRM & Payroll", icon: "⎔", desc: "Algorithmic HR management and payroll processing." },
-      { id: "SW-05", name: "Mobile App Dev", icon: "📱", desc: "Cross-platform mobile applications." },
-      { id: "SW-06", name: "Cloud Sync", icon: "☁", desc: "Secure cloud migration and continuous integration." },
-    ];
-    const experts = <?= json_encode(array_map(function($e) {
-        return [
-            'id' => htmlspecialchars($e['unit_id']),
-            'name' => htmlspecialchars($e['name'] ?? 'Unknown Operative'),
-            'role' => htmlspecialchars($e['role']),
-            'details' => htmlspecialchars($e['details'] ?? 'Ready for deployment.'),
-            'rate' => '$' . floatval($e['hourly_rate']),
-            'class' => htmlspecialchars($e['unit_class']),
-            'photo' => !empty($e['photo_path']) ? 'uploads/photos/' . htmlspecialchars($e['photo_path']) : null
-        ];
-    }, $engineers)) ?>;
-
-    document.getElementById('systems-grid').innerHTML = softwareServices.map(s => `
-      <div class="sci-fi-card p-8 group border border-slate-200 hover:shadow-xl transition-all duration-300">
-        <div class="flex justify-between items-start mb-6"><div class="text-3xl text-cyan-600">${s.icon}</div><div class="text-[10px] font-bold tracking-widest text-slate-500">${s.id}</div></div>
-        <h3 class="text-2xl font-robot font-bold text-slate-900 mb-3 group-hover:text-cyan-600 transition-colors uppercase">${s.name}</h3>
-        <p class="text-sm text-slate-600 leading-relaxed mb-6">${s.desc}</p>
-        <a href="quote.php?service_id=${s.id}&service_name=${encodeURIComponent(s.name)}" class="text-xs text-cyan-700 font-bold uppercase tracking-widest cursor-pointer hover:text-cyan-500 inline-block">Compile.run() ↗</a>
-      </div>`).join('');
-
-    document.getElementById('experts-grid').innerHTML = experts.map(e => `
-      <div class="sci-fi-card p-6 h-full flex flex-col items-center text-center relative overflow-hidden border border-slate-200 hover:shadow-xl transition-all duration-300">
-        <div class="text-[10px] font-bold text-cyan-600 tracking-widest w-full text-left mb-6">${e.id} // ${e.class}</div>
-        <div class="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.3)] bg-slate-50 flex items-center justify-center shrink-0">
-            ${e.photo ? `<img src="${e.photo}" class="w-full h-full object-cover">` : `<span class="text-3xl text-slate-300 font-mono">?</span>`}
-        </div>
-        <h3 class="font-robot font-bold text-xl text-slate-900 uppercase">${e.name}</h3>
-        <div class="text-[10px] font-bold text-cyan-700 tracking-[0.2em] mb-3 uppercase">${e.role}</div>
-        <p class="text-[11px] text-slate-500 line-clamp-3 mb-6 leading-relaxed italic h-12">"${e.details}"</p>
-        <div class="text-2xl font-robot font-bold text-slate-900 mt-auto mb-6">${e.rate}<span class="text-xs text-slate-500 ml-1">/HR</span></div>
-        <a href="quote.php?service_id=${e.id}&service_name=${encodeURIComponent('Unit Deployment: ' + e.role)}" class="text-[10px] text-cyan-700 font-bold uppercase tracking-widest cursor-pointer hover:text-cyan-500 inline-block w-full border-t border-slate-100 pt-4 transition-colors">Deploy_Unit() ↗</a>
-      </div>`).join('');
-
-    const nav = document.getElementById('main-nav');
-    window.addEventListener('scroll', () => {
-      window.scrollY > 20 ? nav.classList.add('bg-white/90', 'backdrop-blur-md', 'py-4', 'shadow-sm') : nav.classList.remove('bg-white/90', 'backdrop-blur-md', 'py-4', 'shadow-sm');
-    });
-  </script>
-</body>
-</html>
+<?php require_once 'includes/footer.php'; ?>

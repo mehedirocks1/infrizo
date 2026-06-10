@@ -1,11 +1,15 @@
 <?php
+require_once '../includes/config.php';
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once '../includes/config.php';
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        die('CSRF token validation failed.');
+    }
+
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
 
@@ -48,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endif; ?>
             <form method="POST" action="" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-widest">Username</label>
                     <input type="text" name="username" required class="input-cyber w-full p-3 bg-slate-100">

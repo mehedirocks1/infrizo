@@ -191,7 +191,11 @@ CREATE TABLE IF NOT EXISTS `settings` (
   `setting_value` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `setting_key` (`setting_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO `settings` (`id`, `setting_key`, `setting_value`) VALUES 
+  (1, 'site_name', 'INFRIZO'),
+  (2, 'seo_description', 'Automated IT infrastructure and robotic software solutions. Best IT software company in BD.');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

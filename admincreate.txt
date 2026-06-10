@@ -114,6 +114,18 @@ CREATE TABLE `freelancer_applications` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
 
+-- 10. SETTINGS TABLE
+CREATE TABLE `settings` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `setting_key` VARCHAR(50) NOT NULL UNIQUE,
+  `setting_value` TEXT,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+
+INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES 
+('site_name', 'INFRIZO'),
+('seo_description', 'Automated IT infrastructure and robotic software solutions. Best IT software company in BD.');
+
 -- 9. ENGINEERS TABLE
 CREATE TABLE `engineers` (
   `id` INT NOT NULL AUTO_INCREMENT,

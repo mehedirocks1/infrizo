@@ -1,7 +1,13 @@
 <?php
-session_start();
+require_once 'includes/config.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        die('CSRF token validation failed.');
+    }
     if (isset($_POST['add_to_cart'])) {
         $product_id = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT);
         

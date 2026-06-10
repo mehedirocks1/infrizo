@@ -7,6 +7,9 @@ $service_name = $_GET['service_name'] ?? '';
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_quote'])) {
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        die('CSRF token validation failed.');
+    }
     $client_name = $_POST['client_name'] ?? '';
     $client_email = $_POST['client_email'] ?? '';
     $client_phone = $_POST['client_phone'] ?? '';

@@ -53,8 +53,12 @@ $page = $_GET['page'] ?? 'dashboard';
           'view_order',
           'generate_quote',
           'applications',
+          'inquiries',
           'engineers',
-          'engineer_form'
+          'engineer_form',
+          'settings',
+          'admins',
+          'backup'
 
       ];
       

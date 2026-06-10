@@ -96,7 +96,8 @@ require_once 'includes/header.php';
                 <?php endif; ?>
 
                 <form method="POST" action="" enctype="multipart/form-data" class="space-y-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-[9px] font-bold text-cyan-700 tracking-widest mb-2 uppercase">Full Name</label>
                             <input type="text" name="name" required class="input-cyber w-full p-4 text-sm bg-slate-50 focus:bg-white" placeholder="Subject Name">
@@ -140,4 +141,4 @@ require_once 'includes/header.php';
     </div>
 </main>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once 'includes/footer.php'; ?>ludes/footer.php'; ?>

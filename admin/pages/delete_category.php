@@ -1,4 +1,7 @@
 <?php
+if (!isset($_GET['token']) || !verify_csrf_token($_GET['token'])) {
+    die('CSRF token validation failed.');
+}
 $id = $_GET['id'] ?? null;
 
 if ($id) {

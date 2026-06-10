@@ -1,121 +1,87 @@
 <?php
-// Safely start session if not already active to track the cart
+require_once __DIR__ . '/config.php';
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Calculate total cart items for the HUD indicator
+$settings = [];
+try {
+    $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings");
+    while ($row = $stmt->fetch()) {
+        $settings[$row['setting_key']] = $row['setting_value'];
+    }
+} catch (Exception $e) {}
+
+$site_name = $settings['site_name'] ?? 'INFRIZO';
+$seo_desc = $settings['seo_description'] ?? 'Automated IT infrastructure and robotic software solutions. Best IT software company in BD.';
+$logo_path = $settings['logo'] ?? '';
+$meta_pixel_id = $settings['meta_pixel_id'] ?? '';
+
 $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
-
-// Nav links array
-$navLinks = ["SYSTEMS", "NETWORK", "HARDWARE", "UNITS"];
-
-// Dynamic SEO Fallbacks
-$page_title = $page_title ?? (defined('SITE_TITLE') ? SITE_TITLE : 'INFRIZO IT Solutions');
-$meta_desc = $meta_description ?? 'Automated IT infrastructure and robotic software solutions. Best IT software company in Bangladesh.';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= htmlspecialchars($page_title) ?></title>
-  
-  <meta name="description" content="<?= htmlspecialchars($meta_desc) ?>">
+  <title><?= htmlspecialchars($site_name) ?> - IT Solutions</title>
+  <meta name="description" content="<?= htmlspecialchars($seo_desc) ?>">
   <meta name="robots" content="index, follow">
-  <meta property="og:title" content="<?= htmlspecialchars($page_title) ?>">
-  <meta property="og:description" content="<?= htmlspecialchars($meta_desc) ?>">
-  
-  <!-- Tailwind CSS CDN for styling -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-
-  <!-- Custom Styles -->
   <link rel="stylesheet" href="assets/css/style.css">
+  
+  <?php if (!empty($meta_pixel_id)): ?>
+  <!-- Meta Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '<?= htmlspecialchars($meta_pixel_id) ?>');
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=<?= htmlspecialchars($meta_pixel_id) ?>&ev=PageView&noscript=1"/></noscript>
+  <!-- End Meta Pixel Code -->
+  <?php endif; ?>
+
+  <!-- AI Scraping Ready / Schema.org -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "<?= htmlspecialchars($site_name) ?>",
+    "url": "<?= 'http://' . $_SERVER['HTTP_HOST'] . '/' ?>",
+    "logo": "<?= 'http://' . $_SERVER['HTTP_HOST'] . '/uploads/' . htmlspecialchars($logo_path) ?>"
+  }
+  </script>
 </head>
 <body class="selection:bg-cyan-500/30 selection:text-white">
-  
   <div class="scanlines"></div>
   <div class="global-cyber-grid"></div>
 
-  <!-- HUD NAVBAR -->
-  <nav id="main-nav" class="fixed top-0 w-full z-50 transition-all duration-300 bg-transparent border-transparent py-6">
+  <nav id="main-nav" class="fixed top-0 w-full z-50 transition-all duration-300 bg-white/90 backdrop-blur-md py-4 shadow-sm border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
       <div class="font-robot font-bold text-3xl tracking-widest text-slate-900 flex items-center gap-2">
-        <a href="index.php" class="flex items-center">
-            <span class="text-cyan-600">⟨</span>INFRIZO<span class="text-cyan-600">⟩</span>
+        <a href="index.php" class="flex items-center gap-2">
+            <?php if($logo_path): ?><img src="uploads/<?= htmlspecialchars($logo_path) ?>" alt="Logo" class="h-8"><?php else: ?><span class="text-cyan-600">⟨</span><?= htmlspecialchars($site_name) ?><span class="text-cyan-600">⟩</span><?php endif; ?>
         </a>
       </div>
-      
-      <div class="hidden md:flex items-center gap-8 text-sm font-bold tracking-widest text-slate-500" id="desktop-links">
-        <?php foreach ($navLinks as $index => $link): ?>
-          <a href="index.php#<?= strtolower($link) ?>" class="hover:text-cyan-600 transition-colors relative group">
-            <span class="text-xs text-cyan-600 mr-1 opacity-0 group-hover:opacity-100 transition-opacity">0<?= $index + 1 ?>.</span>
-            <?= $link ?>
+      <div class="hidden md:flex items-center gap-10 text-sm font-bold tracking-widest text-slate-500" id="desktop-links">
+          <a href="index.php#systems" class="hover:text-cyan-600 transition-colors uppercase">Systems</a>
+          <a href="cart.php" class="flex items-center gap-2 text-slate-900 hover:text-cyan-600 transition-colors uppercase bg-slate-100 px-4 py-2 border border-slate-200">
+              [ CART ]
+              <?php if($cart_count > 0): ?><span class="bg-cyan-600 text-white px-2 py-0.5 text-[10px] animate-pulse"><?= $cart_count ?>_ASSETS</span><?php endif; ?>
           </a>
-        <?php endforeach; ?>
-        
-        <!-- DESKTOP CART HUD -->
-        <a href="cart.php" class="flex items-center gap-2 text-slate-900 hover:text-cyan-600 transition-all uppercase bg-white/60 px-4 py-2 border border-slate-200 backdrop-blur-sm group shadow-sm hover:shadow-cyan-500/20">
-            <span class="text-cyan-600 group-hover:animate-pulse">[*]</span> CART
-            <?php if($cart_count > 0): ?>
-                <span class="bg-cyan-600 text-white px-2 py-0.5 text-[10px] animate-pulse font-mono tracking-tighter">
-                    <?= $cart_count ?>_ASSET<?= $cart_count > 1 ? 'S' : '' ?>
-                </span>
-            <?php endif; ?>
-        </a>
       </div>
-      
-      <div class="hidden md:flex items-center gap-4">
-          <button class="btn-cyber px-6 py-2 text-sm">
-            INITIATE_CONTACT
-          </button>
-      </div>
-
-      <!-- MOBILE TOGGLE BUTTON -->
-      <div class="flex items-center gap-4 md:hidden">
-          <!-- Quick Mobile Cart Icon -->
-          <a href="cart.php" class="text-slate-900 flex items-center relative">
-              <span class="text-xl font-bold">[C]</span>
-              <?php if($cart_count > 0): ?>
-                  <span class="absolute -top-2 -right-3 bg-cyan-600 text-white text-[9px] px-1.5 py-0.5 font-mono animate-pulse">
-                      <?= $cart_count ?>
-                  </span>
-              <?php endif; ?>
-          </a>
-          
-          <button id="mobile-menu-btn" class="text-cyan-600 text-2xl font-bold">
-            [≡]
-          </button>
-      </div>
+      <button class="hidden md:block btn-cyber px-6 py-2 text-sm">INITIATE_CONTACT</button>
+      <button id="mobile-menu-btn" class="md:hidden text-cyan-600 text-2xl font-bold">[≡]</button>
     </div>
   </nav>
-
-  <!-- MOBILE MENU -->
-  <div id="mobile-menu" class="hidden fixed inset-0 z-40 bg-white/95 backdrop-blur-xl border-b border-cyan-200 pt-24 px-6 flex-col gap-6">
-      
-      <!-- MOBILE CART LINK -->
-      <a href="cart.php" class="mobile-link text-2xl font-robot font-bold text-cyan-600 hover:text-cyan-700 border-b border-cyan-200 pb-4 flex justify-between items-center">
-        <span>&gt; CART_MATRIX</span>
-        <?php if($cart_count > 0): ?>
-            <span class="bg-cyan-600 text-white px-3 py-1 text-sm animate-pulse font-mono">
-                <?= $cart_count ?> ASSETS
-            </span>
-        <?php endif; ?>
-      </a>
-
-      <!-- STANDARD MOBILE LINKS -->
-      <?php foreach ($navLinks as $link): ?>
-        <a href="index.php#<?= strtolower($link) ?>" class="mobile-link text-2xl font-robot font-bold text-slate-800 hover:text-cyan-600 border-b border-slate-200 pb-4">
-          &gt; <?= $link ?>
-        </a>
-      <?php endforeach; ?>
-      
-      <button class="btn-cyber btn-cyber-solid py-4 text-sm mt-4 w-full">
-        INITIATE_CONTACT
-      </button>
-  </div>
+  <div id="mobile-menu" class="hidden fixed inset-0 z-40 bg-white/95 backdrop-blur-xl border-b border-cyan-200 pt-24 px-6 flex-col gap-6"></div>

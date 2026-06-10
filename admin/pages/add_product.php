@@ -3,6 +3,9 @@
 $categories = $pdo->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        die('CSRF token validation failed.');
+    }
     
     // Basic Field Data
     $cat_id     = $_POST['category_id'];
@@ -29,12 +32,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
         }
 
         $file_ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-        $image_name = $slug . '-' . time() . '.' . $file_ext;
-        $target_path = $upload_dir . $image_name;
-
-        if (!move_uploaded_file($_FILES['image']['tmp_name'], $target_path)) {
-            echo '<div class="p-4 mb-6 bg-yellow-100 border border-yellow-500 text-yellow-800 font-bold">WARNING: Image upload failed.</div>';
+        if (!in_array(strtolower($file_ext), ['jpg', 'jpeg', 'png', 'webp', 'svg'])) {
+            echo '<div class="p-4 mb-6 bg-red-100 border border-red-500 text-red-800 font-bold">WARNING: Invalid image type.</div>';
             $image_name = null;
+        } else {
+            $image_name = $slug . '-' . time() . '.' . $file_ext;
+            $target_path = $upload_dir . $image_name;
+
+            if (!move_uploaded_file($_FILES['image']['tmp_name'], $target_path)) {
+                echo '<div class="p-4 mb-6 bg-yellow-100 border border-yellow-500 text-yellow-800 font-bold">WARNING: Image upload failed.</div>';
+                $image_name = null;
+            }
         }
     }
 
@@ -57,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_product'])) {
 
 <div class="sci-fi-card p-8 bg-white/80 max-w-4xl">
     <form method="POST" action="" enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         
         <div class="grid grid-cols-2 gap-6">
             <div>

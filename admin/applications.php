@@ -1,5 +1,5 @@
 <?php
-require_once 'includes/auth.php';
+require_once 'auth.php';
 
 $filter = $_GET['filter'] ?? 'Pending';
 $allowed_filters = ['Pending', 'Approved', 'Rejected', 'All'];

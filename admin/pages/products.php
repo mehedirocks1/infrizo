@@ -169,7 +169,7 @@ $stats = $pdo->query("SELECT
                         <a href="?page=edit_product&id=<?= $p['id'] ?>" class="text-slate-400 hover:text-cyan-600 transition-colors text-[10px] font-bold uppercase tracking-widest">
                             [ Edit ]
                         </a>
-                        <a href="?page=delete_product&id=<?= $p['id'] ?>" 
+                        <a href="?page=delete_product&id=<?= $p['id'] ?>&token=<?= htmlspecialchars($_SESSION['csrf_token']) ?>" 
                            onclick="return confirm('CRITICAL WARNING: Purge this asset from the matrix permanently?');" 
                            class="text-red-300 hover:text-red-600 transition-colors text-[10px] font-bold uppercase tracking-widest">
                             [ Del ]

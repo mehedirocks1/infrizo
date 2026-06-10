@@ -1,10 +1,12 @@
 <?php
-session_start();
-if (!isset($_SESSION['admin_logged_in'])) {
+require_once '../includes/config.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (!isset($_SESSION['admin_user'])) {
     die("Access Denied.");
 }
 
-require_once '../includes/config.php';
 require_once '../vendor/autoload.php';
 
 use Dompdf\Dompdf;

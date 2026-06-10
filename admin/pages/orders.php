@@ -1,6 +1,9 @@
 <?php
 // --- 1. ACTION HANDLERS (Status Update & Purge) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        die('CSRF token validation failed.');
+    }
     // Update Order Status
     if (isset($_POST['update_status'])) {
         $order_id = $_POST['order_id'];
@@ -182,6 +185,7 @@ $stats = $pdo->query("SELECT
 
                         <!-- STATUS UPDATE FORM -->
                         <form method="POST" class="flex gap-1 items-center mt-1 w-full justify-end">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                             <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
                             <select name="new_payment" class="text-[9px] p-1.5 border border-slate-200 bg-white font-bold uppercase focus:border-cyan-500 outline-none w-20">
                                 <option value="Pending" <?= $o['payment_status'] == 'Pending' ? 'selected' : '' ?>>UNPAID</option>
