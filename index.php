@@ -81,6 +81,11 @@ $first_cat_slug = !empty($all_categories) ? '#' . htmlspecialchars($all_categori
     <!-- Products Grid -->
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
       <?php foreach ($products as $p): ?>
+          <?php 
+          $info_stmt = $pdo->prepare("SELECT * FROM software_information WHERE product_id = ? LIMIT 4");
+          $info_stmt->execute([$p['id']]);
+          $software_info = $info_stmt->fetchAll();
+          ?>
           <div class="sci-fi-card group flex flex-col bg-white border border-slate-200 hover:shadow-2xl transition-all duration-500">
               
               <!-- Product Image/Visual Header -->
@@ -114,6 +119,17 @@ $first_cat_slug = !empty($all_categories) ? '#' . htmlspecialchars($all_categori
                   <p class="text-xs text-slate-500 leading-relaxed mb-8 font-bold uppercase tracking-wide line-clamp-3">
                       &gt; <?= htmlspecialchars($p['short_description']) ?>
                   </p>
+                  
+                  <?php if(!empty($software_info)): ?>
+                      <div class="mb-8 space-y-2 border-l-2 border-<?= $accentColor ?>-500 pl-3">
+                          <?php foreach($software_info as $info): ?>
+                              <div class="flex items-start text-[10px] text-slate-600 font-mono">
+                                  <span class="text-<?= $accentColor ?>-600 mr-2 font-bold uppercase tracking-widest">[<?= htmlspecialchars($info['feature_name']) ?>]</span>
+                                  <span class="truncate"><?= htmlspecialchars($info['feature_value']) ?></span>
+                              </div>
+                          <?php endforeach; ?>
+                      </div>
+                  <?php endif; ?>
                   
                   <div class="mt-auto">
                       <div class="flex items-center justify-between border-t border-slate-100 pt-6">

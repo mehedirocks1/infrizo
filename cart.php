@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_quote']) && !e
         $pdo->beginTransaction();
         
         // Insert main order (product_id is now NULL since we use order_items)
-        $ins = $pdo->prepare("INSERT INTO orders (order_number, customer_name, customer_email, total_amount, payment_status, order_status) VALUES (?, ?, ?, ?, 'Pending', 'Processing')");
+        $ins = $pdo->prepare("INSERT INTO orders (order_number, order_type, customer_name, customer_email, total_amount, payment_status, order_status) VALUES (?, 'Quotation', ?, ?, ?, 'Pending', 'Processing')");
         $ins->execute([$order_num, $name, $email, $total_value]);
         $order_id = $pdo->lastInsertId();
 
