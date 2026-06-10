@@ -19,6 +19,21 @@ $ecommerce_categories = $pdo->query("
 
 // Calculate total cart items for the HUD
 $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
+
+// Fetch dynamic engineers / units
+$engineers = [];
+try {
+    $stmt = $pdo->query("SELECT * FROM engineers WHERE status = 'Active' ORDER BY id ASC");
+    if ($stmt) {
+        $engineers = $stmt->fetchAll();
+    }
+} catch(Exception $e) {
+    // Fallback if table hasn't been created yet
+    $engineers = [
+        ['unit_id' => 'UNIT-01', 'name' => 'Agent Null', 'role' => 'Network Eng.', 'hourly_rate' => 15, 'unit_class' => 'Alpha', 'details' => 'Standard protocol operative.', 'photo_path' => ''],
+        ['unit_id' => 'UNIT-02', 'name' => 'Agent Void', 'role' => 'Cyber Security', 'hourly_rate' => 20, 'unit_class' => 'Shield', 'details' => 'Advanced penetration tester.', 'photo_path' => '']
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -28,6 +43,13 @@ $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
   <title>INFRIZO - IT Solutions || Best IT software company in Bangladesh</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  
+  <meta name="description" content="INFRIZO - IT Solutions. Best IT software company in Bangladesh providing enterprise software, POS, mobile apps, and algorithmic solutions.">
+  <meta name="keywords" content="IT Solutions, Software Company, Bangladesh, Web Development, ERP, POS, Tech Infrastructure">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="INFRIZO - IT Solutions">
+  <meta property="og:description" content="Automated IT infrastructure and robotic software solutions. Best IT software company in BD.">
+
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
@@ -218,6 +240,18 @@ $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
     </div>
   </section>
 
+  <!-- APPLY CTA -->
+  <section class="py-20 px-6 bg-slate-900 text-white text-center border-t-4 border-cyan-900">
+    <div class="max-w-4xl mx-auto relative z-10">
+        <div class="text-cyan-500 font-bold text-xs tracking-[0.3em] mb-4">// RECRUITMENT_PROTOCOL</div>
+        <h2 class="text-4xl font-robot font-bold mb-4">JOIN THE MATRIX.</h2>
+        <p class="text-slate-400 mb-8 uppercase tracking-widest text-sm max-w-2xl mx-auto">
+          We are seeking skilled freelance operatives. If you possess the talent, we have a mission for you. Submit your credentials for deployment consideration.
+        </p>
+        <a href="apply.php" class="btn-cyber btn-cyber-solid-white px-10 py-4 text-xs">APPLY_FOR_DEPLOYMENT</a>
+    </div>
+  </section>
+
   <!-- TERMINAL FOOTER -->
   <footer class="relative bg-slate-100 pt-16 pb-8 px-6 border-t-4 border-cyan-600 z-10">
     <div class="max-w-7xl mx-auto text-center md:text-left">
@@ -240,26 +274,37 @@ $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
       { id: "SW-05", name: "Mobile App Dev", icon: "📱", desc: "Cross-platform mobile applications." },
       { id: "SW-06", name: "Cloud Sync", icon: "☁", desc: "Secure cloud migration and continuous integration." },
     ];
-    const experts = [
-      { id: "UNIT-01", role: "Network Eng.", rate: "$15", class: "Alpha" },
-      { id: "UNIT-02", role: "Cyber Security", rate: "$20", class: "Shield" },
-      { id: "UNIT-03", role: "Full Stack", rate: "$18", class: "Dev" },
-      { id: "UNIT-04", role: "Cloud Arch.", rate: "$25", class: "Nexus" },
-    ];
+    const experts = <?= json_encode(array_map(function($e) {
+        return [
+            'id' => htmlspecialchars($e['unit_id']),
+            'name' => htmlspecialchars($e['name'] ?? 'Unknown Operative'),
+            'role' => htmlspecialchars($e['role']),
+            'details' => htmlspecialchars($e['details'] ?? 'Ready for deployment.'),
+            'rate' => '$' . floatval($e['hourly_rate']),
+            'class' => htmlspecialchars($e['unit_class']),
+            'photo' => !empty($e['photo_path']) ? 'uploads/photos/' . htmlspecialchars($e['photo_path']) : null
+        ];
+    }, $engineers)) ?>;
 
     document.getElementById('systems-grid').innerHTML = softwareServices.map(s => `
       <div class="sci-fi-card p-8 group border border-slate-200 hover:shadow-xl transition-all duration-300">
         <div class="flex justify-between items-start mb-6"><div class="text-3xl text-cyan-600">${s.icon}</div><div class="text-[10px] font-bold tracking-widest text-slate-500">${s.id}</div></div>
         <h3 class="text-2xl font-robot font-bold text-slate-900 mb-3 group-hover:text-cyan-600 transition-colors uppercase">${s.name}</h3>
         <p class="text-sm text-slate-600 leading-relaxed mb-6">${s.desc}</p>
-        <div class="text-xs text-cyan-700 font-bold uppercase tracking-widest cursor-pointer hover:text-cyan-500">Compile.run() ↗</div>
+        <a href="quote.php?service_id=${s.id}&service_name=${encodeURIComponent(s.name)}" class="text-xs text-cyan-700 font-bold uppercase tracking-widest cursor-pointer hover:text-cyan-500 inline-block">Compile.run() ↗</a>
       </div>`).join('');
 
     document.getElementById('experts-grid').innerHTML = experts.map(e => `
-      <div class="sci-fi-card p-6 h-full flex flex-col items-center text-center relative overflow-hidden border border-slate-200">
+      <div class="sci-fi-card p-6 h-full flex flex-col items-center text-center relative overflow-hidden border border-slate-200 hover:shadow-xl transition-all duration-300">
         <div class="text-[10px] font-bold text-cyan-600 tracking-widest w-full text-left mb-6">${e.id} // ${e.class}</div>
-        <h3 class="font-robot font-bold text-xl text-slate-900 mb-1 uppercase">${e.role}</h3>
-        <div class="text-2xl font-robot font-bold text-slate-900 mt-auto">${e.rate}<span class="text-xs text-slate-500 ml-1">/HR</span></div>
+        <div class="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.3)] bg-slate-50 flex items-center justify-center shrink-0">
+            ${e.photo ? `<img src="${e.photo}" class="w-full h-full object-cover">` : `<span class="text-3xl text-slate-300 font-mono">?</span>`}
+        </div>
+        <h3 class="font-robot font-bold text-xl text-slate-900 uppercase">${e.name}</h3>
+        <div class="text-[10px] font-bold text-cyan-700 tracking-[0.2em] mb-3 uppercase">${e.role}</div>
+        <p class="text-[11px] text-slate-500 line-clamp-3 mb-6 leading-relaxed italic h-12">"${e.details}"</p>
+        <div class="text-2xl font-robot font-bold text-slate-900 mt-auto mb-6">${e.rate}<span class="text-xs text-slate-500 ml-1">/HR</span></div>
+        <a href="quote.php?service_id=${e.id}&service_name=${encodeURIComponent('Unit Deployment: ' + e.role)}" class="text-[10px] text-cyan-700 font-bold uppercase tracking-widest cursor-pointer hover:text-cyan-500 inline-block w-full border-t border-slate-100 pt-4 transition-colors">Deploy_Unit() ↗</a>
       </div>`).join('');
 
     const nav = document.getElementById('main-nav');

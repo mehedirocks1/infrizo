@@ -1,4 +1,5 @@
 <?php
+ob_start(); // Prevent headers already sent errors for modular page redirects
 // 1. Require Database Connection FIRST (This securely starts the session!)
 require_once '../includes/config.php';
 
@@ -50,7 +51,10 @@ $page = $_GET['page'] ?? 'dashboard';
           'edit_category',
           'orders',
           'view_order',
-          'generate_quote'
+          'generate_quote',
+          'applications',
+          'engineers',
+          'engineer_form'
 
       ];
       

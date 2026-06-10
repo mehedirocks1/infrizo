@@ -1,5 +1,15 @@
 <?php
-// 1. Session Management (Start securely on every page)
+// 1. Security Headers & Cookie Hardening
+ini_set('session.cookie_httponly', 1);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.cookie_samesite', 'Strict');
+
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-XSS-Protection: 1; mode=block');
+    header('X-Content-Type-Options: nosniff');
+}
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }

@@ -33,6 +33,10 @@ $isHardware = ($product['category_slug'] === 'hardware');
 $accentClass = $isHardware ? 'purple' : 'cyan';
 $accentHex = $isHardware ? '#7c3aed' : '#0284c7';
 
+// Inject SEO Data
+$page_title = ($product['meta_title'] ?: $product['name']) . ' | INFRIZO';
+$meta_description = $product['meta_description'] ?: $product['short_description'];
+
 require_once 'includes/header.php';
 ?>
 

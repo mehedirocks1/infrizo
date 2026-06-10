@@ -5,7 +5,7 @@
           <span class="text-cyan-500">⟨</span>CMD<span class="text-cyan-500">⟩</span>
       </div>
       <div class="text-[10px] text-cyan-600 mt-1 tracking-[0.2em] font-bold animate-pulse">
-          USER: <?= htmlspecialchars($_SESSION['admin_username']) ?>
+          USER: <?= htmlspecialchars($_SESSION['admin_user']['username']) ?>
       </div>
   </div>
 
@@ -47,6 +47,18 @@
     <a href="?page=inquiries" class="<?= $page == 'inquiries' ? 'bg-orange-900/40 border-l-2 border-orange-500' : 'hover:bg-slate-800' ?> text-slate-300 px-4 py-3 text-sm tracking-widest font-bold uppercase transition-all group">
         <span class="text-orange-500 mr-2">[?]</span> Incoming Comms
     </a>
+
+    <!-- Freelancer Management -->
+    <div class="px-4 pt-8 pb-2 text-xs text-slate-500 font-bold tracking-widest uppercase">Freelancer Hub</div>
+
+    <a href="?page=applications" class="<?= $page == 'applications' ? 'bg-yellow-900/40 border-l-2 border-yellow-500' : 'hover:bg-slate-800' ?> text-slate-300 px-4 py-3 text-sm tracking-widest font-bold uppercase transition-all group">
+        <span class="text-yellow-500 mr-2">[&]</span> Applications
+    </a>
+
+    <a href="?page=engineers" class="<?= $page == 'engineers' || $page == 'engineer_form' ? 'bg-yellow-900/40 border-l-2 border-yellow-500' : 'hover:bg-slate-800' ?> text-slate-300 px-4 py-3 text-sm tracking-widest font-bold uppercase transition-all group">
+        <span class="text-yellow-500 mr-2">[@]</span> Engineers
+    </a>
+
 
     <div class="mt-auto pt-10">
         <a href="logout.php" class="text-red-500/60 hover:text-red-500 px-4 py-3 text-[10px] tracking-[0.3em] font-bold uppercase transition-all flex items-center gap-2 border-t border-slate-800">

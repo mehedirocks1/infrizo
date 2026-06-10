@@ -9,13 +9,22 @@ $cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
 
 // Nav links array
 $navLinks = ["SYSTEMS", "NETWORK", "HARDWARE", "UNITS"];
+
+// Dynamic SEO Fallbacks
+$page_title = $page_title ?? (defined('SITE_TITLE') ? SITE_TITLE : 'INFRIZO IT Solutions');
+$meta_desc = $meta_description ?? 'Automated IT infrastructure and robotic software solutions. Best IT software company in Bangladesh.';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= defined('SITE_TITLE') ? SITE_TITLE : 'INFRIZO IT Solutions' ?></title>
+  <title><?= htmlspecialchars($page_title) ?></title>
+  
+  <meta name="description" content="<?= htmlspecialchars($meta_desc) ?>">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="<?= htmlspecialchars($page_title) ?>">
+  <meta property="og:description" content="<?= htmlspecialchars($meta_desc) ?>">
   
   <!-- Tailwind CSS CDN for styling -->
   <script src="https://cdn.tailwindcss.com"></script>

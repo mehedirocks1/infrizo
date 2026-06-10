@@ -3,7 +3,12 @@ session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_to_cart'])) {
-        $product_id = $_POST['product_id'];
+        $product_id = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT);
+        
+        if (!$product_id) {
+            header("Location: index.php");
+            exit;
+        }
         
         if (!isset($_SESSION['cart'])) {
             $_SESSION['cart'] = [];
@@ -22,7 +27,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['remove_item'])) {
-        $product_id = $_POST['product_id'];
+        $product_id = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT);
+        
+        if (!$product_id) {
+            header("Location: cart.php");
+            exit;
+        }
         if (isset($_SESSION['cart'][$product_id])) {
             unset($_SESSION['cart'][$product_id]);
         }

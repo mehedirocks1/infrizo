@@ -1,120 +1,101 @@
 <?php
-// Ensure the database configuration is loaded and the variable is accessible
-require_once '../includes/config.php';
-global $pdo; 
+// This file is included from admin/index.php, so $pdo is available.
 
-// Fetch the 5 most recent inquiries (with the specific software product they asked about)
-$recent_inquiries = $pdo->query("
-    SELECT i.*, p.name as product_name
-    FROM inquiries i
-    LEFT JOIN products p ON i.product_id = p.id
-    ORDER BY i.created_at DESC
-    LIMIT 5
-")->fetchAll();
+// Fetch stats from the database
+$stats = [
+    'pending_applications' => $pdo->query("SELECT COUNT(*) FROM freelancer_applications WHERE status = 'Pending'")->fetchColumn(),
+    'processing_orders' => $pdo->query("SELECT COUNT(*) FROM orders WHERE order_status = 'Processing'")->fetchColumn(),
+    'active_engineers' => $pdo->query("SELECT COUNT(*) FROM engineers WHERE status = 'Active'")->fetchColumn(),
+    'unread_inquiries' => $pdo->query("SELECT COUNT(*) FROM inquiries WHERE status = 'Unread'")->fetchColumn(),
+];
+
+// Fetch recent orders
+$recent_orders = $pdo->query("SELECT * FROM orders ORDER BY created_at DESC LIMIT 5")->fetchAll();
 ?>
 
-<div class="flex justify-between items-end mb-8">
-    <h1 class="text-4xl font-robot font-bold text-slate-900">SYSTEM OVERVIEW.</h1>
-    <div class="text-[10px] font-bold text-cyan-600 tracking-[0.2em] animate-pulse">
-        [ LIVE DATA FEED ACTIVE ]
-    </div>
-</div>
+<h1 class="text-4xl font-robot font-bold text-slate-800 mb-10">System Status Dashboard</h1>
 
-<!-- STATS HUD GRID -->
+<!-- STATS GRID -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
     
-    <!-- Card 1: Assets (Products) -->
-    <div class="sci-fi-card p-6" style="border-color: rgba(2, 132, 199, 0.4)">
-        <div class="text-[10px] text-cyan-600 font-bold tracking-widest mb-2 flex items-center gap-2">
-            <span class="w-1.5 h-1.5 bg-cyan-500 rounded-full"></span> ACTIVE ASSETS
+    <!-- Pending Applications -->
+    <div class="bg-white p-6 shadow-lg border-l-4 border-yellow-500">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Pending Applications</p>
+                <p class="text-4xl font-robot font-bold text-slate-800 mt-1"><?= $stats['pending_applications'] ?></p>
+            </div>
+            <div class="text-yellow-500 text-3xl opacity-50">[&]</div>
         </div>
-        <div class="text-4xl font-robot font-bold text-slate-900">
-            <?= $pdo->query("SELECT COUNT(*) FROM products")->fetchColumn(); ?>
-        </div>
-    </div>
-    
-    <!-- Card 2: Directories (Categories) -->
-    <div class="sci-fi-card p-6" style="border-color: rgba(124, 58, 237, 0.4)">
-        <div class="text-[10px] text-purple-600 font-bold tracking-widest mb-2 flex items-center gap-2">
-            <span class="w-1.5 h-1.5 bg-purple-500 rounded-full"></span> DIRECTORIES
-        </div>
-        <div class="text-4xl font-robot font-bold text-slate-900">
-            <?= $pdo->query("SELECT COUNT(*) FROM categories")->fetchColumn(); ?>
-        </div>
-    </div>
-    
-    <!-- Card 3: Inquiries (Contact Forms) -->
-    <div class="sci-fi-card p-6" style="border-color: rgba(225, 29, 72, 0.4)">
-        <div class="text-[10px] text-red-600 font-bold tracking-widest mb-2 flex items-center gap-2">
-            <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span> UNREAD COMM_LINKS
-        </div>
-        <div class="text-4xl font-robot font-bold text-slate-900">
-            <?= $pdo->query("SELECT COUNT(*) FROM inquiries WHERE status = 'Unread'")->fetchColumn(); ?>
-        </div>
+        <a href="?page=applications&filter=Pending" class="text-xs font-bold text-yellow-600 hover:underline mt-4 inline-block">View Applications &rarr;</a>
     </div>
 
-    <!-- Card 4: Orders (Checkout) -->
-    <div class="sci-fi-card p-6" style="border-color: rgba(16, 185, 129, 0.4)">
-        <div class="text-[10px] text-emerald-600 font-bold tracking-widest mb-2 flex items-center gap-2">
-            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> SECURE TRANSACTIONS
+    <!-- New Orders -->
+    <div class="bg-white p-6 shadow-lg border-l-4 border-green-500">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Processing Orders</p>
+                <p class="text-4xl font-robot font-bold text-slate-800 mt-1"><?= $stats['processing_orders'] ?></p>
+            </div>
+            <div class="text-green-500 text-3xl opacity-50">[!]</div>
         </div>
-        <div class="text-4xl font-robot font-bold text-slate-900">
-            <?= $pdo->query("SELECT COUNT(*) FROM orders")->fetchColumn(); ?>
-        </div>
+        <a href="index.php?page=orders" class="text-xs font-bold text-green-600 hover:underline mt-4 inline-block">View Orders &rarr;</a>
     </div>
 
+    <!-- Active Engineers -->
+    <div class="bg-white p-6 shadow-lg border-l-4 border-cyan-500">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Active Engineers</p>
+                <p class="text-4xl font-robot font-bold text-slate-800 mt-1"><?= $stats['active_engineers'] ?></p>
+            </div>
+            <div class="text-cyan-500 text-3xl opacity-50">[@]</div>
+        </div>
+        <a href="?page=engineers" class="text-xs font-bold text-cyan-600 hover:underline mt-4 inline-block">Manage Engineers &rarr;</a>
+    </div>
+
+    <!-- Unread Inquiries -->
+    <div class="bg-white p-6 shadow-lg border-l-4 border-orange-500">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Unread Inquiries</p>
+                <p class="text-4xl font-robot font-bold text-slate-800 mt-1"><?= $stats['unread_inquiries'] ?></p>
+            </div>
+            <div class="text-orange-500 text-3xl opacity-50">[?]</div>
+        </div>
+        <a href="index.php?page=inquiries" class="text-xs font-bold text-orange-600 hover:underline mt-4 inline-block">View Inquiries &rarr;</a>
+    </div>
 </div>
 
-<!-- RECENT ACTIVITY LOG -->
-<div class="sci-fi-card p-6 bg-white/80" style="border-color: rgba(2, 132, 199, 0.2)">
-    <div class="flex justify-between items-center mb-6 pb-2 border-b border-cyan-100">
-        <h3 class="font-robot font-bold text-2xl text-slate-900">RECENT COMMUNICATIONS LOG</h3>
-        <a href="#" class="text-[10px] text-cyan-600 hover:text-cyan-400 font-bold tracking-widest uppercase">VIEW ALL ↗</a>
-    </div>
-
-    <table class="w-full text-left admin-table">
-        <thead>
-            <tr>
-                <th class="py-3 px-4 text-xs tracking-widest">Timestamp</th>
-                <th class="py-3 px-4 text-xs tracking-widest">Client Designation</th>
-                <th class="py-3 px-4 text-xs tracking-widest">Target Module</th>
-                <th class="py-3 px-4 text-xs tracking-widest text-right">Status</th>
-            </tr>
-        </thead>
-        <tbody class="text-sm font-bold text-slate-600">
-            <?php if(empty($recent_inquiries)): ?>
+<!-- RECENT ACTIVITY -->
+<div>
+    <h2 class="text-2xl font-robot font-bold text-slate-800 mb-4">Recent Order Matrix Activity</h2>
+    <div class="bg-white shadow-lg overflow-x-auto">
+        <table class="w-full text-sm text-left text-slate-500">
+            <thead class="text-xs text-slate-700 uppercase bg-slate-50">
                 <tr>
-                    <td colspan="4" class="py-8 text-center text-slate-400 font-normal tracking-widest text-xs">
-                        [ NO INCOMING TRANSMISSIONS DETECTED ]
-                    </td>
+                    <th class="px-6 py-3">Order Ref</th>
+                    <th class="px-6 py-3">Customer</th>
+                    <th class="px-6 py-3">Total</th>
+                    <th class="px-6 py-3">Date</th>
+                    <th class="px-6 py-3">Status</th>
                 </tr>
-            <?php else: ?>
-                <?php foreach($recent_inquiries as $inq): ?>
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="py-4 px-4 text-slate-500 font-normal text-[11px] tracking-wider">
-                        <?= date('Y-m-d H:i', strtotime($inq['created_at'])) ?>
-                    </td>
-                    <td class="py-4 px-4 text-slate-900">
-                        <?= htmlspecialchars($inq['client_name']) ?>
-                        <div class="text-[10px] text-slate-400 font-normal mt-0.5"><?= htmlspecialchars($inq['company_name'] ?? 'Independent') ?></div>
-                    </td>
-                    <td class="py-4 px-4 text-cyan-700">
-                        <?= htmlspecialchars($inq['product_name'] ?? 'General Inquiry') ?>
-                    </td>
-                    <td class="py-4 px-4 text-right">
-                        <?php if($inq['status'] == 'Unread'): ?>
-                            <span class="px-2 py-1 bg-red-50 text-red-600 text-[9px] tracking-[0.2em] border border-red-200 animate-pulse">
-                                UNREAD
-                            </span>
-                        <?php else: ?>
-                            <span class="px-2 py-1 bg-slate-100 text-slate-500 text-[9px] tracking-[0.2em] border border-slate-200">
-                                <?= strtoupper($inq['status']) ?>
-                            </span>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php if (empty($recent_orders)): ?>
+                    <tr><td colspan="5" class="text-center p-8 text-slate-400 font-mono">-- No recent orders --</td></tr>
+                <?php else: ?>
+                    <?php foreach ($recent_orders as $order): ?>
+                        <tr class="bg-white border-b hover:bg-slate-50">
+                            <td class="px-6 py-4 font-mono font-bold text-cyan-600"><?= htmlspecialchars($order['order_number']) ?></td>
+                            <td class="px-6 py-4"><?= htmlspecialchars($order['customer_name']) ?><br><span class="text-xs text-slate-400"><?= htmlspecialchars($order['customer_email']) ?></span></td>
+                            <td class="px-6 py-4 font-mono">$<?= number_format($order['total_amount'], 2) ?></td>
+                            <td class="px-6 py-4 font-mono text-xs"><?= date('d M Y, H:i', strtotime($order['created_at'])) ?></td>
+                            <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-bold uppercase bg-blue-100 text-blue-800"><?= htmlspecialchars($order['order_status']) ?></span></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 </div>

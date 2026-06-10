@@ -75,6 +75,17 @@ CREATE TABLE `orders` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
 
+-- 7. ORDER ITEMS TABLE
+CREATE TABLE `order_items` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `order_id` INT NOT NULL,
+  `product_id` INT NOT NULL,
+  `quantity` INT DEFAULT '1',
+  `price_at_order` DECIMAL(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 INSERT INTO admins (username, password, role)
 VALUES (
     'mehediofficials28@gmail.com',
@@ -86,3 +97,34 @@ INSERT INTO `categories` (`name`, `slug`, `description`) VALUES
 ('Digital Constructs', 'software', 'Enterprise software and algorithmic solutions.'),
 ('Network Infrastructure', 'network', 'High-speed nodes and routing frameworks.'),
 ('Physical Assets', 'hardware', 'Heavy-duty processing units and racks.');
+
+-- 8. FREELANCER APPLICATIONS TABLE
+CREATE TABLE `freelancer_applications` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(100) NOT NULL,
+  `email` VARCHAR(100) NOT NULL,
+  `phone` VARCHAR(20) DEFAULT NULL,
+  `portfolio_link` VARCHAR(255) DEFAULT NULL,
+  `photo_path` VARCHAR(255) NOT NULL,
+  `cv_path` VARCHAR(255) NOT NULL,
+  `cover_letter` TEXT,
+  `status` ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+
+-- 9. ENGINEERS TABLE
+CREATE TABLE `engineers` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `unit_id` VARCHAR(20) NOT NULL UNIQUE,
+  `name` VARCHAR(100) NOT NULL,
+  `role` VARCHAR(100) NOT NULL,
+  `hourly_rate` DECIMAL(10,2) NOT NULL,
+  `unit_class` VARCHAR(50) NOT NULL,
+  `details` TEXT DEFAULT NULL,
+  `photo_path` VARCHAR(255) DEFAULT NULL,
+  `status` ENUM('Active','Hidden') DEFAULT 'Active',
+  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;

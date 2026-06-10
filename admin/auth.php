@@ -1,9 +1,9 @@
 <?php
-// session_start(); <-- REMOVED: Our config.php handles this now!
-
-// If the user is not logged in, redirect them to the login terminal
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (!isset($_SESSION['admin_user'])) {
     header("Location: login.php");
     exit;
 }
-?>
+require_once '../includes/config.php';

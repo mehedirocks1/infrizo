@@ -27,9 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order'])) {
     $email = $_POST['customer_email'];
     $total = $product['price_numeric'];
 
-    $ins = $pdo->prepare("INSERT INTO orders (order_number, customer_name, customer_email, total_amount, payment_status, order_status) VALUES (?, ?, ?, ?, 'Pending', 'Processing')");
+    $ins = $pdo->prepare("INSERT INTO orders (order_number, product_id, customer_name, customer_email, total_amount, payment_status, order_status) VALUES (?, ?, ?, ?, ?, 'Pending', 'Processing')");
     
-    if ($ins->execute([$order_num, $name, $email, $total])) {
+    if ($ins->execute([$order_num, $product_id, $name, $email, $total])) {
         $order_success = true;
     }
 }

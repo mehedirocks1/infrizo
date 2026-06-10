@@ -63,6 +63,12 @@ require_once 'includes/header.php';
     <?php else: ?>
         <h1 class="text-4xl font-robot font-bold text-slate-900 mb-8 uppercase">Acquisition Cart.</h1>
         
+        <?php if (!empty($error)): ?>
+            <div class="mb-8 p-4 border border-red-500 bg-red-500/10 text-red-500 text-xs font-mono uppercase tracking-widest">
+                [ ERROR ] <?= htmlspecialchars($error) ?>
+            </div>
+        <?php endif; ?>
+        
         <div class="grid lg:grid-cols-3 gap-10">
             <div class="lg:col-span-2 space-y-4">
                 <?php if(empty($products)): ?>
